@@ -22,9 +22,26 @@ import json
 import logging
 import asyncio
 import re
+import threading
+from http.server import BaseHTTPRequestHandler, HTTPServer
 from datetime import datetime, timedelta
 from typing import Optional, Dict, List, Tuple
 from dotenv import load_dotenv
+
+# Tambahan Web Server untuk Render agar tidak Port Timeout
+class HealthCheckHandler(BaseHTTPRequestHandler):
+    def do_GET(self):
+        self.send_response(200)
+        self.end_headers()
+        self.wfile.write(b"Bot is alive!")
+
+def run_health_check():
+    port = int(os.environ.get("PORT", 8080))
+    server = HTTPServer(('0.0.0.0', port), HealthCheckHandler)
+    server.serve_forever()
+
+# Jalankan server di thread terpisah
+threading.Thread(target=run_health_check, daemon=True).start()
 
 # Web Scraping
 from bs4 import BeautifulSoup
